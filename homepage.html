@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Oracle of Useless INfo</title></head>
+<style>.btn{ padding: 5px; } div{ margin: 20px; }</style>
+<body>
+<h1>Oracle of Useless INfo</h1>
+<div>
+    <select class="btn" id="One">
+        <option value="-1">loading</option>
+    </select>
+</div>
+<div>
+    <select class="btn" id="Two">
+        <option value="-1">loading</option>
+    </select>
+</div>
+<div style="position: relative;display: inline-block">
+    <select class="btn" id="Three">
+        <option value="1">find</option>
+        <option value="2">sort</option></select>
+    <input type="text" class="btn" id="Fore">
+    <ul style="position: absolute;left: 30px;top: 20px;list-style-type: none;" id="hint"></ul>
+</div>
+<div>
+    <button id="do">Do it!</button></div>
+<script>var urlDo = "https://www.cs.uky.edu/~paul/public/P4_Sources.json"; 
+    var data = []; 
+    var textArr = []; 
+    ajax({
+        method: 'get',
+        url: './getfile.php',
+        data: {
+            once: 1,
+            url: urlDo
+        },
+        success: function(res) {
+            res = JSON.parse(res);
+            var str = "";
+            for (var i = 0; i < res.length; i++) {
+                str += "<option value='" + i + "'>" + res[i].name + "</option>"
+            }
+            data = res;
+            document.getElementById("One").innerHTML = str;
+            getTwoText();
+        }
+    });
+    
+    document.getElementById("do").addEventListener("click",function(e) {
+        var oneIndex = document.getElementById("One").value;
+        var twoIndex = document.getElementById("Two").value;
+        var foreIndex = document.getElementById("Fore").value;
+        var type = document.getElementById("Three").value;
+        if(oneIndex!="-1"&&twoIndex!="-1"){
+            window.location = "./getfile.php?once=3&two="+data[oneIndex].two+"&url="+data[oneIndex].url+"&title="+textArr[twoIndex].key+"&seach="+foreIndex+"&type="+type;
+        }else{
+            alert("still loading");
+        }
+    });
+    
+    document.getElementById("One").addEventListener("change",function(e) {
+        getTwoText();
+    });
+    
+    document.getElementById("Two").addEventListener("change",function(e) {
+        document.getElementById("Fore").value = "";
+        document.getElementById("hint").innerHTML = "";
+    });
+    
+    document.getElementById("Fore").addEventListener("keyup", function(e) {
+        checkText();
+    });
+   
+    document.getElementById("Fore").addEventListener("focus", function(e) {
+        checkText();
+    });
+   
+    document.getElementById("Fore").addEventListener("blur", function(e) {
+        if (document.getElementById("Fore").value == "") {
+            document.getElementById("hint").innerHTML = "";
+        }
+    });
+    
+    function checkText() {
+        var v = document.getElementById("Two").value; 
+        var vt = document.getElementById("Fore").value; 
+        console.log(v);
+        if (v != "-1") {
+            var lis = "";
+            for (var i = 0; i < textArr[v].value.length; i++) {
+                if (textArr[v].value[i].indexOf(vt) !== -1) {
+                    lis += "<li style='color: red'>" + textArr[v].value[i] + "</li>";
+                }
+            }
+            document.getElementById("hint").innerHTML = lis;
+        }
+    }
+   
+    function getTwoText() {
+        var index = document.getElementById("One").value;
+        document.getElementById("Two").innerHTML = "<option>loading</option>";
+        ajax({
+            method: 'get',
+            url: './getfile.php',
+            data: {
+                once: 2,
+                url: data[index].url,
+                two: data[index].two
+            },
+            success: function(res) {
+                res = JSON.parse(res);
+                var str = "";
+                for (var i = 0; i < res.length; i++) {
+                    str += "<option value='" + i + "'>" + res[i].key + "</option>"
+                }
+                textArr = res;
+                document.getElementById("Two").innerHTML = str;
+            }
+        });
+    }
+    
+    function ajax(opt) {
+        var xmlHttp = XMLHttpRequest ? new XMLHttpRequest() : new ActiveXObject('Microsoft.XMLHTTP');
+        var params = [];
+        for (var key in opt.data) {
+            params.push(key + '=' + opt.data[key]);
+        }
+        var postData = params.join('&');
+        xmlHttp.open("GET", opt.url + '?' + postData);
+        xmlHttp.send(null);
+        xmlHttp.onreadystatechange = function() {
+            if (xmlHttp.readyState == 4 && xmlHttp.status == 200) {
+                opt.success(xmlHttp.responseText);
+            }
+        };
+    }
+</script>
+</body>
+
+</html>
